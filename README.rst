@@ -1,7 +1,7 @@
 Physalis
 ********
 
-Physalis is a e-mail notifier using feeds and customizable user settings.
+Physalis is a e-mail notifier using entries and customizable user settings.
 
 
 Workflow
@@ -9,7 +9,7 @@ Workflow
 
 Physalis works with a very simple workflow:
 
-#. Producers send data (users and feeds) to RabbitMQ queues.
+#. Producers send data (users and entries) to RabbitMQ queues.
 
 #. Physalis consumer (physalisc) consume data and save it into MongoDB
    collections.
@@ -25,7 +25,7 @@ Physalis consumer (physalisc)
 -----------------------------
 
 Consumer component to save messages from two RabbitMQ queues (``users`` and
-``feeds``) to MongoDB collections validating *or not* customizables fields.
+``entries``) to MongoDB collections validating *or not* customizables fields.
 
 Messages from ``users`` queue must have the following basic JSON format:
 
@@ -46,11 +46,11 @@ E.g.::
         }
     }
 
-Messages from ``feeds`` queue must have the following basic JSON format:
+Messages from ``entries`` queue must have the following basic JSON format:
 
-* ``feed_code``: Unique feed code
+* ``entry_code``: Unique entry code
 * ``producer_code``: Unique producer code
-* ``data``: Feed data
+* ``data``: Entry data
    * ``deadline``: Deadline date
    * Others fields can be added, but these will be validated matching with
      producer fields settings
@@ -58,7 +58,7 @@ Messages from ``feeds`` queue must have the following basic JSON format:
 E.g.::
 
     {
-        feed_code: "4535326",
+        entry_code: "4535326",
         producer_code: "5353454",
         data: {
             category: "politics",
@@ -75,4 +75,4 @@ Physalis notifier (physalisn)
 -----------------------------
 
 Notifier component to send email messages to users registered with a summary
-including filtered feeds.
+including filtered entries.
