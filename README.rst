@@ -2,6 +2,21 @@ Physalis
 ********
 
 Physalis is an e-mail notifier using entries and customizable user settings.
+Physalis is written on top of Tornado, Motor & Pika using completely
+asynchronous programming.
+
+
+Requirements
+============
+
+* MongoDB
+* RabbitMQ
+* CliHelper
+* Tornado
+* PyMongo
+* Motor
+* Pika
+* Schematics
 
 
 Workflow
@@ -14,8 +29,11 @@ Physalis works with a very simple workflow:
 #. Physalis consumer (physalisc) consume data from RabbitMQ queues and save it
    into MongoDB collections.
 
-#. Physalis notifier (physalisn) process data and send email messages via SMTP
-   to users email addresses.
+#. Physalis processor (physalisp) process matching data (between users and
+   entries), and send the results to a RabbitMQ exchange.
+
+#. Physalis notifier (physalisn) consume data from RabbitMQ queue and send
+   email messages via SMTP to users email addresses.
 
 
 Components
@@ -76,13 +94,18 @@ E.g.::
         }
     }
 
+Physalis processor (physalisp)
+------------------------------
+
+Processor component to match data and prepare to send the results to a RabbitMQ
+exchange.
+
 
 Physalis notifier (physalisn)
 -----------------------------
 
 Notifier component to send email messages to users registered with a summary
 including filtered entries.
-
 
 
 .. [1] Producer code can be sent via ``app_id`` header of AMQP message. If
