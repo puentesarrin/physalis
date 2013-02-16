@@ -9,14 +9,14 @@ asynchronous programming.
 Requirements
 ============
 
-* MongoDB
-* RabbitMQ
-* CliHelper
-* Tornado
-* PyMongo
-* Motor
-* Pika
-* Schematics
+* `MongoDB`_
+* `RabbitMQ`_
+* `CliHelper`_
+* `Tornado`_
+* `PyMongo`_
+* `Motor`_
+* `Pika`_
+* `Schematics`_
 
 
 Workflow
@@ -98,7 +98,7 @@ Physalis processor (``physalisp``)
 ----------------------------------
 
 Processor component to match data and prepare to send the results to a RabbitMQ
-exchange. These summaries includes filtered entries.
+exchange. These summaries includes filtered entries only.
 
 
 Physalis notifier (``physalisn``)
@@ -112,5 +112,13 @@ processed by Physalis processor.
        ``producer_code`` field of AMQP message body has a value, this will
        overwrite the ``app_id`` header.
 
+.. _MongoDB: http://www.mongodb.org
+.. _RabbitMQ: http://www.rabbitmq.com
+.. _CliHelper: https://github.com/gmr/clihelper
+.. _Tornado: http://www.tornadoweb.org
+.. _PyMongo: http://api.mongodb.org/python/current/
+.. _Motor: https://github.com/mongodb/motor
+.. _Pika: https://github.com/pika/pika
+.. _Schematics: https://github.com/j2labs/schematics
 .. _MongoDB Extended JSON: http://docs.mongodb.org/manual/reference/mongodb-extended-json/
 .. _BSON: http://bsonspec.org
