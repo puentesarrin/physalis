@@ -26,21 +26,21 @@ Physalis works with a very simple workflow:
 
 #. Producers send data (users and entries) to RabbitMQ exchanges.
 
-#. Physalis consumer (physalisc) consume data from RabbitMQ queues and save it
-   into MongoDB collections.
+#. Physalis consumer (``physalisc``) consume data from RabbitMQ queues and save
+   it into MongoDB collections.
 
-#. Physalis processor (physalisp) process matching data (between users and
+#. Physalis processor (``physalisp``) process matching data (between users and
    entries), and send the results to a RabbitMQ exchange.
 
-#. Physalis notifier (physalisn) consume data from RabbitMQ queue and send
+#. Physalis notifier (``physalisn``) consume data from RabbitMQ queue and send
    email messages via SMTP to users email addresses.
 
 
 Components
 ==========
 
-Physalis consumer (physalisc)
------------------------------
+Physalis consumer (``physalisc``)
+---------------------------------
 
 Consumer component to save messages from two RabbitMQ queues (``users`` and
 ``entries``) to MongoDB collections validating *or not* customizables fields.
@@ -94,18 +94,18 @@ E.g.::
         }
     }
 
-Physalis processor (physalisp)
-------------------------------
+Physalis processor (``physalisp``)
+----------------------------------
 
 Processor component to match data and prepare to send the results to a RabbitMQ
-exchange.
+exchange. These summaries includes filtered entries.
 
 
-Physalis notifier (physalisn)
------------------------------
+Physalis notifier (``physalisn``)
+---------------------------------
 
-Notifier component to send email messages to users registered with a summary
-including filtered entries.
+Notifier component to send email messages to users registered with the result
+processed by Physalis processor.
 
 
 .. [1] Producer code can be sent via ``app_id`` header of AMQP message. If
