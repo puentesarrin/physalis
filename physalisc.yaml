@@ -1,0 +1,64 @@
+%YAML 1.2
+---
+Application:
+    wake_interval: 5
+    amqp_uri: amqp://guest:guest@localhost:5672/%2f
+    amqp_users_queue_name: physalis_users
+    amqp_users_queue_passive: False
+    amqp_users_queue_durable: True
+    amqp_users_queue_exclusive: False
+    amqp_users_queue_auto_delete: False
+    amqp_users_noack: True
+    amqp_users_consumer_tag: ct_physalis_users
+    amqp_entries_queue_name: physalis_entries
+    amqp_entries_queue_passive: False
+    amqp_entries_queue_durable: True
+    amqp_entries_queue_exclusive: False
+    amqp_entries_queue_auto_delete: False
+    amqp_entries_noack: True
+    amqp_entries_consumer_tag: ct_physalis_entries
+    db_uri: mongodb://localhost/?safe=true
+    db_name: physalis
+    db_users_collection_name: users
+    db_users_collection_per_producer: True
+    db_entries_collection_name: entries
+    db_entries_collection_per_producer: True
+
+Daemon:
+    user: puentesarrin
+    group: puentesarrin
+    pidfile: /var/run/physalisc.pid
+
+Logging:
+  version: 1
+  formatters:
+    verbose:
+      format: '%(levelname) -10s %(asctime)s %(process)-6d %(processName) -15s %(name) -10s %(funcName) -20s: %(message)s'
+      datefmt: '%Y-%m-%d %H:%M:%S'
+  handlers:
+    console:
+      class: logging.StreamHandler
+      formatter: verbose
+      level: DEBUG
+      debug_only: True
+    file:
+      class: logging.FileHandler
+      formatter: verbose
+      level: ERROR
+      filename: example.log
+    mongodb:
+      class: mongolog.MongoHandler
+      level: DEBUG
+      collection: log.consumer
+      db: physalis
+  loggers:
+    PhysalisConsumer:
+      handlers: [console, mongodb]
+      level: DEBUG
+      propagate: true
+    clihelper:
+      handlers: [console]
+      level: DEBUG
+      propagate: true
+  disable_existing_loggers: false
+  incremental: false
