@@ -1,21 +1,30 @@
 # -*- coding: utf-8 *-*
 import clihelper
 
-from motor import MotorClient
 from tornado import ioloop
 
 
 class DaemonProcess(clihelper.Controller):
 
-    def _loop(self):
+    def start_loop(self):
+        self.log.debug('Starting IOLoop')
         self._ioloop = ioloop.IOLoop.instance()
         self._ioloop.start()
 
     def _process(self):
-        self.db = MotorClient(self._get_config('db_uri')).open_sync()[
-            self._get_config('db_name')]
         self.process()
-        self._loop()
+        self.start_loop()
 
-    def _shutdown(self):
+    def process(self):
+        raise NotImplementedError
+
+    def _cleanup(self):
+        self.finish()
+        self.stop_loop()
+
+    def finish(self):
+        pass
+
+    def stop_loop(self):
+        self.log.debug('Stopping IOLoop')
         self._ioloop.stop()
