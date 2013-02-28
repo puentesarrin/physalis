@@ -61,10 +61,7 @@ class PhysalisConsumer(DaemonProcess):
         connection.channel(self._on_channel_open)
 
     def on_connection_closed(self, connection):
-        self.log.info(dir(connection))
-        self.log.info(str(connection.server_properties))
-        self.log.info(str(connection.connection_state))
-        self.log.info(str(connection.event_state))
+        #TODO: Log disconnection details...
         #self.log.warning('Server closed connection, reopening: (%s) %s',
                          #method_frame.method.reply_code,
                          #method_frame.method.reply_text)
