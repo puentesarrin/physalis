@@ -11,11 +11,16 @@ class PhysalisConsumer(DaemonProcess):
 
     users_label = 'users'
     entries_label = 'entries'
+    channels = []
 
     def _set_properties(self):
         self.users_queue = self._get_config('amqp_%s_queue_name' %
             self.users_label)
         self.entries_queue = self._get_config('amqp_%s_queue_name' %
+            self.entries_label)
+        self.consume_users_enabled = self._get_config('consume_%s_enabled' %
+            self.users_label)
+        self.consume_entries_enabled = self._get_config('consume_%s_enabled' %
             self.entries_label)
         self.validators_map = {self.users_label: ConsumerUsersValidator,
                                self.entries_label: ConsumerEntriesValidator}
@@ -28,8 +33,10 @@ class PhysalisConsumer(DaemonProcess):
             on_connected_callback=self._create_channels)
 
     def _create_channels(self):
-        self.amqp_users = self._create_channel(self.users_label)
-        self.amqp_entries = self._create_channel(self.entries_label)
+        if self.consume_users_enabled:
+            self.amqp_users = self._create_channel(self.users_label)
+        if self.consume_entries_enabled:
+            self.amqp_entries = self._create_channel(self.entries_label)
 
     def _create_channel(self, label):
         channel_client = self.amqp[self.users_label]
@@ -44,6 +51,7 @@ class PhysalisConsumer(DaemonProcess):
             queue_auto_delete=self._get_config('amqp_%s_queue_auto_delete' %
                 label),
             noack=self._get_config('amqp_%s_queue_noack' % label))
+        self.channels.append(channel_client)
         return channel_client
 
     @gen.engine
@@ -68,6 +76,6 @@ class PhysalisConsumer(DaemonProcess):
             return self._get_config('db_%s_collection_name' % channel_name)
 
     def finish(self):
-        self.amqp_users.cancel_consume()
-        self.amqp_entries.cancel_consume()
+        for channel in self.channels:
+            channel.cancel_consume()
         self.amqp.close()

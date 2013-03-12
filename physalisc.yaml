@@ -2,6 +2,8 @@
 ---
 Application:
     wake_interval: 5
+    consume_users_enabled: True
+    consume_entries_enabled: True
     amqp_uri: amqp://guest:guest@localhost:5672/%2f
     amqp_users_queue_name: physalis_users
     amqp_users_queue_passive: False
