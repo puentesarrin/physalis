@@ -9,44 +9,57 @@ from tornado import gen
 
 class PhysalisConsumer(DaemonProcess):
 
+    users_label = 'users'
+    entries_label = 'entries'
+
+    def _set_properties(self):
+        self.users_queue = self._get_config('amqp_%s_queue_name' %
+            self.users_label)
+        self.entries_queue = self._get_config('amqp_%s_queue_name' %
+            self.entries_label)
+        self.validators_map = {self.users_label: ConsumerUsersValidator,
+                               self.entries_label: ConsumerEntriesValidator}
+        self.collections_map = {
+            self.users_queue: self._get_config('db_users_collection_name'),
+            self.entries_queue: self._get_config('db_entries_collection_name')
+        }
+
     def process(self):
-        self.tag_users = 'users'
-        self.tag_entries = 'entries'
-        self.validators_map = {self.tag_users: ConsumerUsersValidator,
-                               self.tag_entries: ConsumerEntriesValidator}
+        self._set_properties()
         self.db = self.db_connect()
-        self.users_amqp_client = AMQPClient(callback=self._consume_messages,
-            tag=self.tag_users,
-            queue_name=self._get_config('amqp_users_queue_name'),
-            consumer_tag=self._get_config('amqp_users_consumer_tag'),
-            logger=self.logger, uri=self._get_config('amqp_uri'),
-            queue_passive=self._get_config('amqp_users_queue_passive'),
-            queue_durable=self._get_config('amqp_users_queue_durable'),
-            queue_exclusive=self._get_config('amqp_users_queue_exclusive'),
-            queue_auto_delete=self._get_config('amqp_users_queue_auto_delete'),
-            noack=self._get_config('amqp_users_queue_noack'))
-        self.entries_amqp_client = AMQPClient(callback=self._consume_messages,
-            tag=self.tag_entries,
-            queue_name=self._get_config('amqp_entries_queue_name'),
-            consumer_tag=self._get_config('amqp_entries_consumer_tag'),
-            logger=self.logger, uri=self._get_config('amqp_uri'),
-            queue_passive=self._get_config('amqp_entries_queue_passive'),
-            queue_durable=self._get_config('amqp_entries_queue_durable'),
-            queue_exclusive=self._get_config('amqp_entries_queue_exclusive'),
-            queue_auto_delete=self._get_config(
-                'amqp_entries_queue_auto_delete'),
-            noack=self._get_config('amqp_entries_queue_noack'))
+        self.amqp = AMQPClient(self._get_config('amqp_uri'), self.logger,
+            on_connected_callback=self._create_channels)
+
+    def _create_channels(self):
+        self.amqp_users = self._create_channel(self.users_label)
+        self.amqp_entries = self._create_channel(self.entries_label)
+
+    def _create_channel(self, label):
+        channel_client = self.amqp[self.users_label]
+        channel_client.setup_and_consume(
+            on_consuming_callback=self._consume_messages,
+            consumer_tag=self._get_config('amqp_%s_consumer_tag' % label),
+            queue_name=self._get_config('amqp_%s_queue_name' % label),
+            queue_passive=self._get_config('amqp_%s_queue_passive' % label),
+            queue_durable=self._get_config('amqp_%s_queue_durable' % label),
+            queue_exclusive=self._get_config('amqp_%s_queue_exclusive' %
+                label),
+            queue_auto_delete=self._get_config('amqp_%s_queue_auto_delete' %
+                label),
+            noack=self._get_config('amqp_%s_queue_noack' % label))
+        return channel_client
 
     def db_connect(self):
         return MotorClient(self._get_config('db_uri')).open_sync()[
             self._get_config('db_name')]
 
     @gen.engine
-    def _consume_messages(self, header, body, tag):
+    def _consume_messages(self, header, body, channel_client):
         try:
-            validator = self.validators_map[tag](self, header, body)
+            validator = self.validators_map[channel_client.label](self,
+                header, body)
             message = validator.message
-            collection_name = self._get_collection_name(tag,
+            collection_name = self._get_collection_name(channel_client.label,
                 message['producer_code'])
             yield Op(self.db[collection_name].insert, message)
             self.logger.debug('Saved message to %s collection.' %
@@ -62,5 +75,6 @@ class PhysalisConsumer(DaemonProcess):
             return self._get_config('db_%s_collection_name' % channel_name)
 
     def finish(self):
-        self.users_amqp_client.close()
-        self.entries_amqp_client.close()
+        self.amqp_users.cancel_consume()
+        self.amqp_entries.cancel_consume()
+        self.amqp.close()
