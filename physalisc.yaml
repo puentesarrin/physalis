@@ -60,5 +60,9 @@ Logging:
       handlers: [console]
       level: DEBUG
       propagate: true
+    pika.adapters.base_connection:
+      handlers: [console]
+      level: DEBUG
+      propagate: true
   disable_existing_loggers: false
   incremental: false
