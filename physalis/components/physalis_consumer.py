@@ -19,10 +19,6 @@ class PhysalisConsumer(DaemonProcess):
             self.entries_label)
         self.validators_map = {self.users_label: ConsumerUsersValidator,
                                self.entries_label: ConsumerEntriesValidator}
-        self.collections_map = {
-            self.users_queue: self._get_config('db_users_collection_name'),
-            self.entries_queue: self._get_config('db_entries_collection_name')
-        }
 
     def process(self):
         self._set_properties()
