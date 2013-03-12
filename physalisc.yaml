@@ -41,11 +41,6 @@ Logging:
       formatter: verbose
       level: DEBUG
       debug_only: True
-    file:
-      class: logging.FileHandler
-      formatter: verbose
-      level: ERROR
-      filename: example.log
     mongodb:
       class: mongolog.MongoHandler
       level: DEBUG
