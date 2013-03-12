@@ -1,6 +1,6 @@
 # -*- coding: utf-8 *-*
-from motor import MotorClient, Op
-from physalis.clients import AMQPClient
+from motor import Op
+from physalis.clients import AMQPClient, MongoDBClient
 from physalis.process import DaemonProcess
 from physalis.validators import (ConsumerUsersValidator,
                                  ConsumerEntriesValidator)
@@ -22,7 +22,8 @@ class PhysalisConsumer(DaemonProcess):
 
     def process(self):
         self._set_properties()
-        self.db = self.db_connect()
+        self.db = MongoDBClient(self._get_config('db_name'),
+            self._get_config('db_uri'), logger=self.logger)
         self.amqp = AMQPClient(self._get_config('amqp_uri'), self.logger,
             on_connected_callback=self._create_channels)
 
@@ -44,10 +45,6 @@ class PhysalisConsumer(DaemonProcess):
                 label),
             noack=self._get_config('amqp_%s_queue_noack' % label))
         return channel_client
-
-    def db_connect(self):
-        return MotorClient(self._get_config('db_uri')).open_sync()[
-            self._get_config('db_name')]
 
     @gen.engine
     def _consume_messages(self, header, body, channel_client):
