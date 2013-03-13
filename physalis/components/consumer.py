@@ -39,7 +39,7 @@ class PhysalisConsumer(DaemonProcess):
             self.amqp_entries = self._create_channel(self.entries_label)
 
     def _create_channel(self, label):
-        channel_client = self.amqp[self.users_label]
+        channel_client = self.amqp[self.label]
         channel_client.setup_and_consume(
             on_consuming_callback=self._consume_messages,
             consumer_tag=self._get_config('amqp_%s_consumer_tag' % label),
