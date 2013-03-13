@@ -1,7 +1,7 @@
 Physalis
 ********
 
-Physalis is an e-mail notifier using entries and customizable user settings.
+Physalis is an email notifier using entries and customizable user settings.
 Physalis is written on top of Tornado, Motor & Pika using completely
 asynchronous programming.
 
@@ -50,7 +50,7 @@ Extended JSON`_ or `BSON`_ are allowed):
 
 * ``user_code``: Unique user code
 * ``producer_code``: Unique producer code [1]_
-* ``email``: User e-mail address
+* ``email``: User email address
 * ``settings``: Custom fields settings
 
 E.g.::
