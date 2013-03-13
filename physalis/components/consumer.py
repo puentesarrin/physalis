@@ -11,7 +11,6 @@ class PhysalisConsumer(DaemonProcess):
 
     users_label = 'users'
     entries_label = 'entries'
-    channels = []
 
     def _set_properties(self):
         self.users_queue = self._get_config('amqp_%s_queue_name' %
@@ -39,7 +38,7 @@ class PhysalisConsumer(DaemonProcess):
             self.amqp_entries = self._create_channel(self.entries_label)
 
     def _create_channel(self, label):
-        channel_client = self.amqp[self.label]
+        channel_client = self.amqp[label]
         channel_client.setup_and_consume(
             on_consuming_callback=self._consume_messages,
             consumer_tag=self._get_config('amqp_%s_consumer_tag' % label),
@@ -51,7 +50,6 @@ class PhysalisConsumer(DaemonProcess):
             queue_auto_delete=self._get_config('amqp_%s_queue_auto_delete' %
                 label),
             noack=self._get_config('amqp_%s_queue_noack' % label))
-        self.channels.append(channel_client)
         return channel_client
 
     @gen.engine
@@ -75,6 +73,4 @@ class PhysalisConsumer(DaemonProcess):
             return self._get_config('db_%s_collection_name' % channel_name)
 
     def finish(self):
-        for channel in self.channels:
-            channel.cancel_consume()
         self.amqp.close()

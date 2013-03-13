@@ -8,6 +8,8 @@ from pika.adapters.tornado_connection import TornadoConnection
 
 class AMQPClient(object):
 
+    channels = {}
+
     def __init__(self, uri, logger, on_connected_callback=None):
         self._uri = uri or 'amqp://guest:guest@localhost:5672/%2f'
         self._logger = logger or logging.getLogger(self.__class__.__name__)
@@ -23,7 +25,10 @@ class AMQPClient(object):
         return self._connection
 
     def __getattr__(self, name):
-        return AMQPChannelClient(self, name)
+        if name in self.channels.keys():
+            return self.channels[name]
+        self.channels[name] = AMQPChannelClient(self, name)
+        return self.channels[name]
 
     def __getitem__(self, name):
         return self.__getattr__(name)
@@ -50,5 +55,7 @@ class AMQPClient(object):
         self._connection = self._amqp_connect()
 
     def close(self):
+        for channel in self.channels.values():
+            channel.cancel_consume()
         self._logger.debug('Closing AMQP connection')
         self._connection.close()
