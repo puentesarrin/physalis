@@ -7,21 +7,21 @@ from physalis import errors, models
 __all__ = ['ConsumerUsersValidator', 'ConsumerEntriesValidator']
 
 
-class Validator(object):
+class ParserMixin(object):
 
     def __init__(self):
-        self.parser_methods = {
-            'application/bson': self._parse_message_to_bson,
-            'application/json': self._parse_message_to_json
+        self.__parser_methods = {
+            'application/bson': self.__parse_message_to_bson,
+            'application/json': self.__parse_message_to_json
         }
 
-    def _parse_message(self, header, body):
-        parser = self.parser_methods.get(header.content_type, None)
+    def parse_message(self, header, body):
+        parser = self.__parser_methods.get(header.content_type, None)
         if parser:
             return parser(body)
         raise errors.UnexpectedFormat(body)
 
-    def _parse_message_to_bson(self, message_body):
+    def __parse_message_to_bson(self, message_body):
         try:
             if not bson.is_valid(self.message_body):
                 raise
@@ -33,7 +33,7 @@ class Validator(object):
         except:
             raise errors.InvalidBSON(message_body)
 
-    def _parse_message_to_json(self, message_body):
+    def __parse_message_to_json(self, message_body):
         try:
             message = json_util.loads(message_body)
             if not isinstance(message, dict):
@@ -44,38 +44,42 @@ class Validator(object):
             raise errors.InvalidJSON(message_body)
 
 
-class ConsumerValidator(Validator):
+class Validator(object):
+
+    def validate_headers(self, message_header):
+        for header in self.headers:
+            if not getattr(message_header, header, None):
+                raise ValueError('%s header message no received.' % header)
+
+    def validate_model(self, message):
+        try:
+            self.model(**message).validate()
+        #TODO: Catch the correct exception, no Exception
+        except Exception as e:
+            raise errors.InvalidModel(e.reason, message)
+
+
+class ConsumerValidator(Validator, ParserMixin):
 
     def __init__(self, header, body):
         self.message_header = header
         self.message_body = body
         super(ConsumerValidator, self).__init__()
 
-    def _validate_headers(self):
-        for header in self.headers:
-            if not getattr(self.message_header, header, None):
-                raise ValueError('%s header message no received.' % header)
-
     def _build_message(self):
-        self.__message = self._parse_message(self.message_header,
-            self.message_body)
-        if not 'producer_code' in self.__message:
+        message = self.parse_message(self.message_header, self.message_body)
+        if not 'producer_code' in message:
             if not getattr(self.message_header, 'app_id', None):
                 raise ValueError("Producer code doesn't exists on message "
                                  "body or header.")
             else:
-                self.__message['producer_code'] = self.message_header.app_id
-
-    def _validate_model(self):
-        try:
-            self.model(**self.__message).validate()
-        except Exception as e:
-            raise errors.InvalidModel(e.reason, self.__message)
+                message['producer_code'] = self.message_header.app_id
+        return message
 
     def validate_and_build_message(self):
-        self._validate_headers()
-        self._build_message()
-        self._validate_model()
+        self.validate_headers(self.message_header)
+        self.__message = self._build_message()
+        self.validate_model(self.__message)
 
     @property
     def message(self):
