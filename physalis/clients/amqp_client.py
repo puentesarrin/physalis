@@ -8,9 +8,8 @@ from pika.adapters.tornado_connection import TornadoConnection
 
 class AMQPClient(object):
 
-    def __init__(self, uri='amqp://guest:guest@localhost:5672/%2f',
-        logger=None, on_connected_callback=None):
-        self._uri = uri
+    def __init__(self, uri, logger, on_connected_callback=None):
+        self._uri = uri or 'amqp://guest:guest@localhost:5672/%2f'
         self._logger = logger or logging.getLogger(self.__class__.__name__)
         self._on_connected_callback = on_connected_callback
         self._amqp_connect()
