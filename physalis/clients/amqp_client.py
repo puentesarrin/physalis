@@ -33,8 +33,8 @@ class AMQPClient(object):
     def __getitem__(self, name):
         return self.__getattr__(name)
 
-    def create_channel(self, on_channel_open):
-        return self._connection.channel(on_channel_open)
+    def create_channel(self, name):
+        return self.__getattr__(name)
 
     def _amqp_connect(self):
         self._connection = TornadoConnection(pika.URLParameters(self.uri),
