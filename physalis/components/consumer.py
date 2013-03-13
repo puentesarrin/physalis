@@ -57,8 +57,7 @@ class PhysalisConsumer(DaemonProcess):
     @gen.engine
     def _consume_messages(self, header, body, channel_client):
         try:
-            validator = self.validators_map[channel_client.label](self,
-                header, body)
+            validator = self.validators_map[channel_client.label](header, body)
             message = validator.message
             collection_name = self._get_collection_name(channel_client.label,
                 message['producer_code'])
