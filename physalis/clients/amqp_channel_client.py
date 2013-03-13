@@ -39,7 +39,7 @@ class AMQPChannelClient(object):
 
     def consume(self, on_consuming_callback):
         self._on_consuming_callback = on_consuming_callback
-        self._client.create_channel(self._on_channel_open)
+        self._client._connection.channel(self._on_channel_open)
 
     def setup_and_consume(self, on_consuming_callback, consumer_tag,
         queue_name, **kwargs):
