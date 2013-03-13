@@ -3,9 +3,6 @@
 
 class AMQPChannelClient(object):
 
-    _configured = False
-    _subscribed = False
-
     def __init__(self, client, label, **kwargs):
         self._client = client
         self._logger = client._logger
@@ -19,14 +16,6 @@ class AMQPChannelClient(object):
     def queue_name(self):
         return self._queue_name
 
-    @property
-    def configured(self):
-        return self._configured
-
-    @property
-    def subscribed(self):
-        return self._subscribed
-
     def setup(self, consumer_tag, queue_name, **kwargs):
         self._consumer_tag = consumer_tag
         self._queue_name = queue_name
@@ -35,7 +24,6 @@ class AMQPChannelClient(object):
         self._queue_exclusive = kwargs.get('queue_exclusive', False)
         self._queue_auto_delete = kwargs.get('queue_auto_delete', False)
         self._noack = kwargs.get('noack', True)
-        self._configured = True
 
     def consume(self, on_consuming_callback):
         self._on_consuming_callback = on_consuming_callback
@@ -61,7 +49,6 @@ class AMQPChannelClient(object):
             consumer_tag=self._consumer_tag)
         self._logger.debug('Waiting for messages from "%s" queue' %
             self.queue_name)
-        self._subscribed = True
 
     def _consume_messages(self, channel, method, header, body):
         self._logger.debug('Received message from "%s" queue: %s' %
@@ -75,7 +62,6 @@ class AMQPChannelClient(object):
         self._channel.basic_cancel(self._on_cancelok, self._consumer_tag)
 
     def _on_cancelok(self, unused_frame):
-        self._subscribed = False
         self._logger.debug('Cancelled consuming to AMQP channel "%s"' %
             self.queue_name)
         if not self.on_cancel_consuming_callback:
